@@ -19,6 +19,7 @@
             --accent: #10b981;
             --text: #f8fafc;
             --text-muted: #64748b;
+            --danger: #f43f5e;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -28,19 +29,36 @@
             color: var(--text);
             font-family: 'Urbanist', sans-serif;
             padding: 16px;
-            padding-top: calc(16px + env(safe-area-inset-top)); /* Suporte para notch do iPhone */
+            padding-top: calc(16px + env(safe-area-inset-top));
             max-width: 500px;
             margin: 0 auto;
             overflow-x: hidden;
         }
 
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0 20px;
+        }
+
         h1 {
             font-family: 'Orbitron', sans-serif;
             color: var(--primary);
-            margin: 15px 0 20px;
             font-size: 22px;
-            text-align: center;
             text-shadow: 0 0 12px rgba(59,130,246,0.4);
+        }
+
+        .btn-reset {
+            background: rgba(244, 63, 94, 0.2);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 6px 12px;
+            font-size: 11px;
+            border-radius: 6px;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            font-weight: bold;
         }
 
         h2 {
@@ -149,7 +167,7 @@
             background: #1e293b;
             border: 1px solid #2d3d57;
             color: #94a3b8;
-            padding: 14px 8px; /* Botões mais altos para polegares */
+            padding: 14px 8px;
             font-size: 13px;
             border-radius: 8px;
             cursor: pointer;
@@ -188,15 +206,18 @@
 </head>
 <body>
 
-    <h1>TIAMAT ARENA</h1>
+    <div class="header-container">
+        <h1>TIAMAT ARENA</h1>
+        <button class="btn-reset" onclick="resetTournament()">Reset</button>
+    </div>
 
     <div class="card">
         <span class="station-label" style="margin-bottom: 8px;">Nomes das Equipas</span>
         <div class="team-input-group">
-            <input type="text" id="t1_name" value="Equipa 1" oninput="updateNames()">
-            <input type="text" id="t2_name" value="Equipa 2" oninput="updateNames()">
-            <input type="text" id="t3_name" value="Equipa 3" oninput="updateNames()">
-            <input type="text" id="t4_name" value="Equipa 4" oninput="updateNames()">
+            <input type="text" id="t1_name" value="Equipa 1" oninput="saveNames(); updateNames();">
+            <input type="text" id="t2_name" value="Equipa 2" oninput="saveNames(); updateNames();">
+            <input type="text" id="t3_name" value="Equipa 3" oninput="saveNames(); updateNames();">
+            <input type="text" id="t4_name" value="Equipa 4" oninput="saveNames(); updateNames();">
         </div>
     </div>
 
@@ -215,10 +236,10 @@
 
     <h2>🎲 Final: Party & Co</h2>
     <div class="card">
-        <div class="party-row"><span>1º Lugar (+5 pts)</span><select id="party_pos_0" onchange="calculateScores()"></select></div>
-        <div class="party-row"><span>2º Lugar (+3 pts)</span><select id="party_pos_1" onchange="calculateScores()"></select></div>
-        <div class="party-row"><span>3º Lugar (+2 pts)</span><select id="party_pos_2" onchange="calculateScores()"></select></div>
-        <div class="party-row"><span>4º Lugar (+1 pt)</span><select id="party_pos_3" onchange="calculateScores()"></select></div>
+        <div class="party-row"><span>1º Lugar (+5 pts)</span><select id="party_pos_0" onchange="saveParty(); calculateScores();"></select></div>
+        <div class="party-row"><span>2º Lugar (+3 pts)</span><select id="party_pos_1" onchange="saveParty(); calculateScores();"></select></div>
+        <div class="party-row"><span>3º Lugar (+2 pts)</span><select id="party_pos_2" onchange="saveParty(); calculateScores();"></select></div>
+        <div class="party-row"><span>4º Lugar (+1 pt)</span><select id="party_pos_3" onchange="saveParty(); calculateScores();"></select></div>
     </div>
 
     <script>
@@ -242,16 +263,58 @@
         ];
 
         let results = {};
-        schedule.forEach(m => results[m.id] = 'none');
 
         function init() {
+            loadSavedData();
             renderStructure();
             populatePartyDropdowns();
+            applySavedVisuals();
             calculateScores();
         }
 
         function getTeamName(id) {
             return document.getElementById(`t${id}_name`).value || `Equipa ${id}`;
+        }
+
+        function saveNames() {
+            for(let i=1; i<=4; i++) {
+                localStorage.setItem(`tam_name_${i}`, document.getElementById(`t${i}_name`).value);
+            }
+        }
+
+        function saveParty() {
+            for(let i=0; i<4; i++) {
+                localStorage.setItem(`tam_party_${i}`, document.getElementById(`party_pos_${i}`).value);
+            }
+        }
+
+        function loadSavedData() {
+            // Nomes
+            for(let i=1; i<=4; i++) {
+                let savedName = localStorage.getItem(`tam_name_${i}`);
+                if(savedName !== null) document.getElementById(`t${i}_name`).value = savedName;
+            }
+            // Resultados
+            schedule.forEach(m => {
+                let savedRes = localStorage.getItem(`tam_match_${m.id}`);
+                results[m.id] = savedRes ? savedRes : 'none';
+            });
+        }
+
+        function applySavedVisuals() {
+            schedule.forEach(m => {
+                let res = results[m.id];
+                if(res !== 'none') {
+                    document.getElementById(`btn_${m.id}_A`).className = 'btn-game' + (res === 'A' ? ' active-win' : '');
+                    document.getElementById(`btn_${m.id}_D`).className = 'btn-game' + (res === 'D' ? ' active-draw' : '');
+                    document.getElementById(`btn_${m.id}_B`).className = 'btn-game' + (res === 'B' ? ' active-win' : '');
+                }
+            });
+            // Dropdowns da fase final
+            for(let i=0; i<4; i++) {
+                let savedPartyVal = localStorage.getItem(`tam_party_${i}`);
+                if(savedPartyVal) document.getElementById(`party_pos_${i}`).value = savedPartyVal;
+            }
         }
 
         function updateNames() {
@@ -266,16 +329,12 @@
         function renderStructure() {
             let h1 = document.getElementById('hora1_matches');
             let h2 = document.getElementById('hora2_matches');
+            h1.innerHTML = ''; h2.innerHTML = '';
             
-            let cyclesH1 = [1, 2, 3, 4];
-            let cyclesH2 = [5, 6, 7, 8];
+            let cyclesH1 = [1, 2, 3, 4]; let cyclesH2 = [5, 6, 7, 8];
 
-            cyclesH1.forEach(c => {
-                h1.innerHTML += `<div class="cycle-box"><div class="cycle-title">Ciclo ${c} (15 min)</div><div id="cycle-${c}"></div></div>`;
-            });
-            cyclesH2.forEach(c => {
-                h2.innerHTML += `<div class="cycle-box"><div class="cycle-title">Ciclo ${c} (15 min)</div><div id="cycle-${c}"></div></div>`;
-            });
+            cyclesH1.forEach(c => { h1.innerHTML += `<div class="cycle-box"><div class="cycle-title">Ciclo ${c} (15 min)</div><div id="cycle-${c}"></div></div>`; });
+            cyclesH2.forEach(c => { h2.innerHTML += `<div class="cycle-box"><div class="cycle-title">Ciclo ${c} (15 min)</div><div id="cycle-${c}"></div></div>`; });
 
             schedule.forEach(m => {
                 let container = document.getElementById(`cycle-${m.cycle}`);
@@ -294,6 +353,8 @@
 
         function setResult(matchId, status) {
             results[matchId] = results[matchId] === status ? 'none' : status;
+            localStorage.setItem(`tam_match_${matchId}`, results[matchId]);
+            
             document.getElementById(`btn_${matchId}_A`).className = 'btn-game' + (results[matchId] === 'A' ? ' active-win' : '');
             document.getElementById(`btn_${matchId}_D`).className = 'btn-game' + (results[matchId] === 'D' ? ' active-draw' : '');
             document.getElementById(`btn_${matchId}_B`).className = 'btn-game' + (results[matchId] === 'B' ? ' active-win' : '');
@@ -333,6 +394,14 @@
                 tbody.innerHTML += `<tr><td class="rank">${i + 1}º</td><td>${t.name}</td><td class="score">${t.score} pts</td></tr>`;
             });
         }
+
+        function resetTournament() {
+            if(confirm("Tens a certeza que queres fazer reset a todos os pontos e nomes?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
         window.onload = init;
     </script>
 </body>
