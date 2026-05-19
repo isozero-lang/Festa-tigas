@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tiamat Arena</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Urbanist:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #151f32;
+            --primary: #3b82f6;
+            --secondary: #a855f7;
+            --accent: #10b981;
+            --text: #f8fafc;
+            --text-muted: #64748b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: var(--bg-main);
+            color: var(--text);
+            font-family: 'Urbanist', sans-serif;
+            padding: 16px;
+            padding-top: calc(16px + env(safe-area-inset-top)); /* Suporte para notch do iPhone */
+            max-width: 500px;
+            margin: 0 auto;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary);
+            margin: 15px 0 20px;
+            font-size: 22px;
+            text-align: center;
+            text-shadow: 0 0 12px rgba(59,130,246,0.4);
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--secondary);
+            font-size: 15px;
+            margin: 25px 0 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h2::after {
+            content: '';
+            flex-grow: 1;
+            height: 1px;
+            background: #22314d;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #22314d;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .team-input-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .team-input-group input {
+            background: #0b0f19;
+            border: 1px solid #22314d;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .leaderboard-table td {
+            padding: 12px 0;
+            border-bottom: 1px solid #22314d;
+            font-size: 16px;
+        }
+        
+        .leaderboard-table tr:last-child td { border: none; }
+        .rank { width: 40px; font-weight: 700; color: var(--secondary); font-family: 'Orbitron'; }
+        .score { text-align: right; font-weight: 700; color: var(--accent); font-family: 'Orbitron'; font-size: 18px; }
+
+        .cycle-box {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: 1px solid #22314d;
+        }
+
+        .cycle-title {
+            font-size: 12px;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .matchup {
+            background: rgba(11, 15, 25, 0.5);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .matchup:last-child { margin-bottom: 0; }
+        
+        .station-label {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+        }
+        
+        .selector-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-game {
+            flex: 1;
+            background: #1e293b;
+            border: 1px solid #2d3d57;
+            color: #94a3b8;
+            padding: 14px 8px; /* Botões mais altos para polegares */
+            font-size: 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .btn-game.active-win { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 0 10px rgba(16,185,129,0.3); }
+        .btn-game.active-draw { background: #475569; color: white; border-color: #475569; }
+
+        .party-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+        
+        .party-row:last-child { margin-bottom: 0; }
+        
+        .party-row select {
+            background: #0b0f19;
+            color: white;
+            border: 1px solid #22314d;
+            padding: 12px;
+            border-radius: 8px;
+            width: 60%;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>TIAMAT ARENA</h1>
+
+    <div class="card">
+        <span class="station-label" style="margin-bottom: 8px;">Nomes das Equipas</span>
+        <div class="team-input-group">
+            <input type="text" id="t1_name" value="Equipa 1" oninput="updateNames()">
+            <input type="text" id="t2_name" value="Equipa 2" oninput="updateNames()">
+            <input type="text" id="t3_name" value="Equipa 3" oninput="updateNames()">
+            <input type="text" id="t4_name" value="Equipa 4" oninput="updateNames()">
+        </div>
+    </div>
+
+    <h2>🏆 Classificação Geral</h2>
+    <div class="card">
+        <table class="leaderboard-table">
+            <tbody id="leaderboard_body"></tbody>
+        </table>
+    </div>
+
+    <h2>🎮 Hora 1: Consolas</h2>
+    <div id="hora1_matches"></div>
+
+    <h2>🎯 Hora 2: Clássicos</h2>
+    <div id="hora2_matches"></div>
+
+    <h2>🎲 Final: Party & Co</h2>
+    <div class="card">
+        <div class="party-row"><span>1º Lugar (+5 pts)</span><select id="party_pos_0" onchange="calculateScores()"></select></div>
+        <div class="party-row"><span>2º Lugar (+3 pts)</span><select id="party_pos_1" onchange="calculateScores()"></select></div>
+        <div class="party-row"><span>3º Lugar (+2 pts)</span><select id="party_pos_2" onchange="calculateScores()"></select></div>
+        <div class="party-row"><span>4º Lugar (+1 pt)</span><select id="party_pos_3" onchange="calculateScores()"></select></div>
+    </div>
+
+    <script>
+        const schedule = [
+            { id: 1, hora: 1, cycle: 1, station: "Mario Kart", tA: 1, tB: 3 },
+            { id: 2, hora: 1, cycle: 1, station: "Tekken / SF", tA: 2, tB: 4 },
+            { id: 3, hora: 1, cycle: 2, station: "Mario Kart", tA: 1, tB: 4 },
+            { id: 4, hora: 1, cycle: 2, station: "Tekken / SF", tA: 2, tB: 3 },
+            { id: 5, hora: 1, cycle: 3, station: "Mario Kart", tA: 2, tB: 4 },
+            { id: 6, hora: 1, cycle: 3, station: "Tekken / SF", tA: 1, tB: 3 },
+            { id: 7, hora: 1, cycle: 4, station: "Mario Kart", tA: 2, tB: 3 },
+            { id: 8, hora: 1, cycle: 4, station: "Tekken / SF", tA: 1, tB: 4 },
+            { id: 9, hora: 2, cycle: 5, station: "Setas", tA: 1, tB: 2 },
+            { id: 10, hora: 2, cycle: 5, station: "Snooker", tA: 3, tB: 4 },
+            { id: 11, hora: 2, cycle: 6, station: "Setas", tA: 3, tB: 4 },
+            { id: 12, hora: 2, cycle: 6, station: "Snooker", tA: 1, tB: 2 },
+            { id: 13, hora: 2, cycle: 7, station: "Setas", tA: 1, tB: 3 },
+            { id: 14, hora: 2, cycle: 7, station: "Snooker", tA: 2, tB: 4 },
+            { id: 15, hora: 2, cycle: 8, station: "Setas", tA: 2, tB: 4 },
+            { id: 16, hora: 2, cycle: 8, station: "Snooker", tA: 1, tB: 3 }
+        ];
+
+        let results = {};
+        schedule.forEach(m => results[m.id] = 'none');
+
+        function init() {
+            renderStructure();
+            populatePartyDropdowns();
+            calculateScores();
+        }
+
+        function getTeamName(id) {
+            return document.getElementById(`t${id}_name`).value || `Equipa ${id}`;
+        }
+
+        function updateNames() {
+            schedule.forEach(m => {
+                document.getElementById(`btn_${m.id}_A`).innerText = getTeamName(m.tA);
+                document.getElementById(`btn_${m.id}_B`).innerText = getTeamName(m.tB);
+            });
+            populatePartyDropdowns();
+            calculateScores();
+        }
+
+        function renderStructure() {
+            let h1 = document.getElementById('hora1_matches');
+            let h2 = document.getElementById('hora2_matches');
+            
+            let cyclesH1 = [1, 2, 3, 4];
+            let cyclesH2 = [5, 6, 7, 8];
+
+            cyclesH1.forEach(c => {
+                h1.innerHTML += `<div class="cycle-box"><div class="cycle-title">Ciclo ${c} (15 min)</div><div id="cycle-${c}"></div></div>`;
+            });
+            cyclesH2.forEach(c => {
+                h2.innerHTML += `<div class="cycle-box"><div class="cycle-title">Ciclo ${c} (15 min)</div><div id="cycle-${c}"></div></div>`;
+            });
+
+            schedule.forEach(m => {
+                let container = document.getElementById(`cycle-${m.cycle}`);
+                container.innerHTML += `
+                    <div class="matchup">
+                        <span class="station-label">${m.station}</span>
+                        <div class="selector-row">
+                            <button class="btn-game" id="btn_${m.id}_A" onclick="setResult(${m.id}, 'A')">${getTeamName(m.tA)}</button>
+                            <button class="btn-game" id="btn_${m.id}_D" onclick="setResult(${m.id}, 'D')" style="max-width: 45px; flex: 0 0 45px;">X</button>
+                            <button class="btn-game" id="btn_${m.id}_B" onclick="setResult(${m.id}, 'B')">${getTeamName(m.tB)}</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function setResult(matchId, status) {
+            results[matchId] = results[matchId] === status ? 'none' : status;
+            document.getElementById(`btn_${matchId}_A`).className = 'btn-game' + (results[matchId] === 'A' ? ' active-win' : '');
+            document.getElementById(`btn_${matchId}_D`).className = 'btn-game' + (results[matchId] === 'D' ? ' active-draw' : '');
+            document.getElementById(`btn_${matchId}_B`).className = 'btn-game' + (results[matchId] === 'B' ? ' active-win' : '');
+            calculateScores();
+        }
+
+        function populatePartyDropdowns() {
+            for(let i=0; i<4; i++) {
+                let select = document.getElementById(`party_pos_${i}`);
+                let currentVal = select.value;
+                let html = `<option value="">-- Escolher --</option>`;
+                for(let j=1; j<=4; j++) html += `<option value="${j}">${getTeamName(j)}</option>`;
+                select.innerHTML = html;
+                if(currentVal) select.value = currentVal;
+            }
+        }
+
+        function calculateScores() {
+            let scores = { 1: 0, 2: 0, 3: 0, 4: 0 };
+            schedule.forEach(m => {
+                if (results[m.id] === 'A') scores[m.tA] += 3;
+                if (results[m.id] === 'B') scores[m.tB] += 3;
+                if (results[m.id] === 'D') { scores[m.tA] += 1; scores[m.tB] += 1; }
+            });
+            const bonus = [5, 3, 2, 1];
+            for(let i=0; i<4; i++) {
+                let t = document.getElementById(`party_pos_${i}`).value;
+                if(t) scores[t] += bonus[i];
+            }
+            let sorted = [];
+            for (let i = 1; i <= 4; i++) sorted.push({ name: getTeamName(i), score: scores[i] });
+            sorted.sort((a, b) => b.score - a.score);
+
+            let tbody = document.getElementById('leaderboard_body');
+            tbody.innerHTML = '';
+            sorted.forEach((t, i) => {
+                tbody.innerHTML += `<tr><td class="rank">${i + 1}º</td><td>${t.name}</td><td class="score">${t.score} pts</td></tr>`;
+            });
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
